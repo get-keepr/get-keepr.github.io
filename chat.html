@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chat on Vibe</title>
-<meta name="description" content="Someone invited you to chat on Vibe, a free and private Matrix messenger.">
+<title>Chat on Keepr</title>
+<meta name="description" content="Someone invited you to chat on Keepr, a free and private Matrix messenger.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0B0C0E">
-<meta property="og:title" content="Chat with me on Vibe">
+<meta property="og:title" content="Chat with me on Keepr">
 <meta property="og:description" content="A free, private Matrix messenger. Tap to start chatting.">
 <meta property="og:image" content="https://get-vibe.github.io/assets/og.png">
 <link rel="icon" href="assets/icon.png">
@@ -30,10 +30,10 @@ a.btn{display:block;padding:14px;border-radius:16px;text-decoration:none;font-we
 <body>
 <main class="card">
   <img src="assets/icon.png" alt="">
-  <h1 id="title">Chat on Vibe</h1>
+  <h1 id="title">Chat on Keepr</h1>
   <p class="id" id="id"></p>
-  <a class="btn primary" id="open" href="#">Open in Vibe</a>
-  <a class="btn secondary" id="get" href="./#download">Get Vibe</a>
+  <a class="btn primary" id="open" href="#">Open in Keepr</a>
+  <a class="btn secondary" id="get" href="./#download">Get Keepr</a>
   <p class="small">Use a different Matrix app? <a id="other" href="https://matrix.to">Open it there</a></p>
 </main>
 <script>
@@ -54,7 +54,7 @@ a.btn{display:block;padding:14px;border-radius:16px;text-decoration:none;font-we
   document.getElementById('id').textContent = id;
   if (id[0] === '@') document.getElementById('title').textContent = 'Chat with ' + id.slice(1).split(':')[0];
   var app = 'vibe://chat/' + id.replace('#', '%23');
-  // Android: open Vibe if it's installed (GitHub com.vibe.app or Google Play
+  // Android: open Keepr if it's installed (GitHub com.vibe.app or Google Play
   // app.vibe.chat, so no package is named), otherwise go to the download.
   var open = android
     ? 'intent://chat/' + id.replace('#', '%23') + '#Intent;scheme=vibe;S.browser_fallback_url=' + encodeURIComponent(get) + ';end'
