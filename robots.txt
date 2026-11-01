@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://get-vibe.github.io/sitemap.xml
+Sitemap: https://get-keepr.github.io/sitemap.xml

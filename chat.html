@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0B0C0E">
 <meta property="og:title" content="Chat with me on Keepr">
 <meta property="og:description" content="A free, private Matrix messenger. Tap to start chatting.">
-<meta property="og:image" content="https://get-vibe.github.io/assets/og.png">
+<meta property="og:image" content="https://get-keepr.github.io/assets/og.png">
 <link rel="icon" href="assets/icon.png">
 <style>
 @font-face{font-family:Figtree;src:url(assets/figtree.ttf)}
@@ -43,7 +43,7 @@ a.btn{display:block;padding:14px;border-radius:16px;text-decoration:none;font-we
   var ua = navigator.userAgent;
   var android = /Android/i.test(ua);
   var get = android
-    ? 'https://github.com/blackshadowde/Vibe-flutter/releases/latest'
+    ? 'https://github.com/blackshadowde/Keepr/releases/latest'
     : './#download';
   document.getElementById('get').href = get;
   if (!valid) {
@@ -53,9 +53,9 @@ a.btn{display:block;padding:14px;border-radius:16px;text-decoration:none;font-we
   }
   document.getElementById('id').textContent = id;
   if (id[0] === '@') document.getElementById('title').textContent = 'Chat with ' + id.slice(1).split(':')[0];
-  var app = 'vibe://chat/' + id.replace('#', '%23');
-  // Android: open Keepr if it's installed (GitHub com.vibe.app or Google Play
-  // app.vibe.chat, so no package is named), otherwise go to the download.
+  var app = 'keepr://chat/' + id.replace('#', '%23');
+  // Android: open Keepr if it's installed (GitHub app.keepr.chat or Google Play
+  // app.keepr.chat, so no package is named), otherwise go to the download.
   var open = android
     ? 'intent://chat/' + id.replace('#', '%23') + '#Intent;scheme=vibe;S.browser_fallback_url=' + encodeURIComponent(get) + ';end'
     : app;
