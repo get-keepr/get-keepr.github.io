@@ -1,4 +1,4 @@
-// Vibe site motion. Without GSAP or with "reduce motion" on, every section
+// Keepr site motion. Without GSAP or with "reduce motion" on, every section
 // simply shows its finished state.
 (() => {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -36,7 +36,7 @@
   onChapters();
 
   // iPhone: copy the source link, and point "Download IPA" at the newest build
-  const SOURCE = 'https://raw.githubusercontent.com/blackshadowde/Vibe-flutter/Vibe/altstore.json';
+  const SOURCE = 'https://raw.githubusercontent.com/blackshadowde/Keepr/Vibe/altstore.json';
   const copyBtn = $('#copy-source');
   copyBtn?.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(SOURCE); copyBtn.textContent = 'Copied'; }
