@@ -186,7 +186,7 @@ h2 { font-size: clamp(40px, 7vw, 96px); font-weight: 900; }
 @keyframes puff { 0%, 10% { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(.4); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(45deg) scale(.9); } }
 
 /* 6. features: chapters (sticky, one scene at a time) */
-.chapters { position: relative; height: 640vh; }
+.chapters { position: relative; height: 720vh; }
 .ch-stage { position: sticky; top: 0; height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 5vw, 80px); padding: 80px var(--pad) 40px; overflow: hidden; }
 .ch-copy h2 { font-size: clamp(40px, 6vw, 84px); margin-bottom: 36px; }
 .ch-list { list-style: none; margin: 0; padding: 0; }
@@ -344,3 +344,19 @@ h2 { font-size: clamp(40px, 7vw, 96px); font-weight: 900; }
 .play-test.soon, .apk-small.soon, .soon-btn { filter: grayscale(1); opacity: .5; }
 .play-test.soon a, .apk-small.soon a, .soon-btn { pointer-events: none; cursor: default; }
 .play-test.soon .play-test-tag { background: var(--muted); color: var(--bg); }
+
+/* threads: a named thread with replies on a tree line */
+.th-card { width: min(84%, 360px); padding: 18px; border-radius: 24px; background: var(--surface-2); text-align: left; }
+.th-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.th-head b { display: block; font-size: 18px; }
+.th-head small { color: var(--muted); font-size: 13px; }
+.th-badge { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: var(--blurple); color: #fff; flex: none; }
+.th-badge svg { width: 22px !important; height: 22px; }
+.th-root, .th-reply { display: flex; align-items: center; gap: 10px; }
+.th-root i, .th-reply i { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: #fff; font-style: normal; font-weight: 800; font-size: 14px; flex: none; }
+.th-root p, .th-reply p { margin: 0; font-size: 15px; }
+.th-root b, .th-reply b { display: block; font-size: 14px; }
+.th-reply { position: relative; margin: 12px 0 0 28px; padding-left: 16px; }
+.th-reply::before { content: ""; position: absolute; left: 0; top: -18px; width: 12px; height: 34px; border-left: 2px solid var(--line); border-bottom: 2px solid var(--line); border-bottom-left-radius: 10px; }
+.sc-thread.on .r1 { animation: land .7s .5s cubic-bezier(.3, 1.4, .5, 1) both; }
+.sc-thread.on .r2 { animation: land .7s 1.1s cubic-bezier(.3, 1.4, .5, 1) both; }
