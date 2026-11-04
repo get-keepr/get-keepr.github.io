@@ -362,8 +362,7 @@ h2 { font-size: clamp(40px, 7vw, 96px); font-weight: 900; }
 .sc-thread.on .r2 { animation: land .7s 1.1s cubic-bezier(.3, 1.4, .5, 1) both; }
 
 /* cursor swarm opening: the pieces stay hidden until a cursor drags them in */
-.swarming .nav .brand, .swarming .nav nav,
-.swarming .hero-copy > .play-test, .swarming .hero-copy > .eyebrow,
-.swarming .headline .line, .swarming .hero-copy > .lede,
-.swarming .cta .btn, .swarming .hero-copy > .trust,
-.swarming .fan .phone.main { clip-path: inset(0 100% 100% 0); }
+.swarming:not(.swarm-ready) main, .swarming:not(.swarm-ready) .foot,
+.swarming:not(.swarm-ready) .nav .brand, .swarming:not(.swarm-ready) .nav nav { opacity: 0; }
+.swarming .swarm-piece { clip-path: inset(0 100% 100% 0); }
+.swarm-skip { position: fixed; right: 16px; bottom: 16px; z-index: 101; padding: 10px 18px; border: 0; border-radius: 999px; background: rgba(30, 31, 35, .85); color: var(--text); font: 700 14px/1 inherit; font-family: inherit; box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }

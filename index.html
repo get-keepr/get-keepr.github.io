@@ -26,7 +26,7 @@
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('keepr-swarm')) {
       document.documentElement.classList.add('swarming');
       // never leave anything hidden if the script can't run
-      setTimeout(function () { document.documentElement.classList.remove('swarming'); }, 7000);
+      setTimeout(function () { if (!window.__swarmStarted) document.documentElement.classList.remove('swarming'); }, 6000);
     }
   } catch (e) {}
 </script>
@@ -362,7 +362,7 @@
 <script src="vendor/gsap.min.js" defer></script>
 <script src="vendor/ScrollTrigger.min.js" defer></script>
 <script src="main.js?v=6" defer></script>
-<script src="swarm.js?v=1" defer></script>
+<script src="swarm.js?v=2" defer></script>
 <script>
 // The newest release, read once: its download, notes and VirusTotal result.
 (function () {

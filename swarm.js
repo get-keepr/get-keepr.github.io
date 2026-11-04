@@ -1,41 +1,53 @@
-// Keepr site opening: a swarm of little coloured cursors builds the top of
-// the page. They come in as a flock, spread out, and each one drags a
-// selection box over a piece of the page; the piece is wiped into view under
-// the box, then the cursors fly off. Once per visit; tap anywhere to skip.
-// Skipped completely with "reduce motion".
+// Keepr site opening: a swarm of little coloured cursors builds the whole
+// page in front of you. They come in as a flock; the page scrolls down one
+// section at a time, and in each section the cursors spread out and drag a
+// selection box over each piece, which is wiped into view under the box.
+// At the bottom they fly off and the page glides back to the top.
+// Once per visit; tap, scroll, a key or "Skip" ends it. Skipped completely
+// with "reduce motion".
 (() => {
   const root = document.documentElement;
   if (!root.classList.contains('swarming')) return;
+  window.__swarmStarted = true;
 
-  const selectors = [
-    '.nav .brand',
-    '.nav nav',
-    '.hero-copy > .play-test',
-    '.hero-copy > .eyebrow',
-    '.headline .line:nth-child(1)',
-    '.headline .line:nth-child(2)',
-    '.hero-copy > .lede',
-    '.cta .btn:nth-child(1)',
-    '.cta .btn:nth-child(2)',
-    '.hero-copy > .trust',
-    '.fan .phone.main',
-  ];
-  const tags = { '.nav .brand': 'logo', '.headline .line:nth-child(1)': 'headline', '.cta .btn:nth-child(1)': 'button', '.fan .phone.main': 'app' };
-  const pieces = selectors
-    .map((s) => ({ sel: s, el: document.querySelector(s), tag: tags[s] || '' }))
-    .filter((p) => p.el && p.el.getClientRects().length);
-
-  const done = () => {
-    root.classList.remove('swarming');
-    pieces.forEach((p) => (p.el.style.clipPath = ''));
-    canvas.remove();
-    try { sessionStorage.setItem('keepr-swarm', '1'); } catch (_) {}
+  // ---- what gets built, section by section ----
+  // a section's pieces: its children, opening up any big wrapper one level
+  // (so nothing in it shows before the cursors place it), at most 14
+  const piecesOf = (sec) => {
+    const out = [];
+    const visit = (el, depth) => {
+      for (const ch of el.children) {
+        if (ch.matches('script, style, canvas, .swarm-skip')) continue;
+        const r = ch.getBoundingClientRect();
+        if (r.width < 8 || r.height < 6) continue;
+        if (depth < 2 && ch.children.length > 1 && r.height > H0 * 0.45) visit(ch, depth + 1);
+        else out.push(ch);
+      }
+    };
+    visit(sec, 0);
+    return out.slice(0, 14);
   };
+  const H0 = window.innerHeight;
+  const sections = [...document.querySelectorAll('main > section, footer')].map((sec) => {
+    const els = piecesOf(sec);
+    if (sec.classList.contains('hero')) els.unshift(...document.querySelectorAll('.nav .brand, .nav nav'));
+    return { sec, pieces: els.map((el) => ({ el, rect: null })) };
+  }).filter((s) => s.pieces.length);
+  const allPieces = sections.flatMap((s) => s.pieces);
+  allPieces.forEach((p) => p.el.classList.add('swarm-piece'));
+  // pieces are hidden one by one now; the page itself can show
+  root.classList.add('swarm-ready');
 
+  // ---- the canvas and a Skip button ----
   const canvas = document.createElement('canvas');
   canvas.setAttribute('aria-hidden', 'true');
   canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;z-index:100;pointer-events:none';
   document.body.appendChild(canvas);
+  const skipBtn = document.createElement('button');
+  skipBtn.type = 'button';
+  skipBtn.className = 'swarm-skip';
+  skipBtn.textContent = 'Skip';
+  document.body.appendChild(skipBtn);
   const ctx = canvas.getContext('2d');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W = 0, H = 0;
@@ -49,36 +61,24 @@
 
   const colors = ['#5BC0FF', '#8C96F6', '#FFA45B', '#EB459E', '#3BCB78', '#FFD54F', '#FF6B4A'];
   const accent = '#5865F2';
-  const N = Math.min(10, pieces.length);
-  const DURATION = 3600;
-  let rnd = 7;
-  const random = () => ((rnd = (rnd * 16807) % 2147483647) / 2147483647);
+  const N = 9;
+  let seed = 7;
+  const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const phase = Array.from({ length: N }, () => random() * Math.PI * 2);
-  const orbit = Array.from({ length: N }, () => 30 + random() * 70);
-  const exitTo = Array.from({ length: N }, () => ({ x: random() < 0.5 ? -40 : W + 40, y: random() * H }));
+  const orbit = Array.from({ length: N }, () => 30 + random() * 60);
 
-  const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)));
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
   const io = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const lerp = (a, b, u) => ({ x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u });
 
-  const center = () => ({ x: W / 2, y: H * 0.45 });
-  const flock = (i, t) => {
-    const a = phase[i] + t * 9, wob = Math.sin(t * 13 + i) * 12, c = center();
-    return { x: c.x + Math.cos(a) * (orbit[i] + wob) + Math.sin(t * 4) * 30, y: c.y + Math.sin(a) * (orbit[i] * 0.6 + wob) + Math.cos(t * 3) * 18 };
+  // each cursor's own position, carried from phase to phase
+  const cur = Array.from({ length: N }, (_, i) => ({ x: W / 2 + (i - N / 2) * 16, y: H + 40 }));
+  const flockAt = (i, s) => {
+    const a = phase[i] + s * 4.5, wob = Math.sin(s * 6 + i) * 10;
+    return { x: W / 2 + Math.cos(a) * (orbit[i] + wob), y: H * 0.5 + Math.sin(a) * (orbit[i] * 0.6 + wob) };
   };
 
-  // timing: pieces are dealt to the cursors in turn
-  const buildStart = 0.2, buildSpan = 0.56;
-  const perSlot = buildSpan / Math.ceil(pieces.length / N);
-  const FLY = 0.34, DRAG = 0.4;
-  const startOf = (k) => buildStart + Math.floor(k / N) * perSlot + (k % N) * 0.012;
-  const rectOf = (p) => {
-    const r = p.el.getBoundingClientRect();
-    return { x: r.left, y: r.top, w: r.width, h: r.height };
-  };
-
-  // the classic pointer arrow
-  const arrow = (x, y, color, alpha, tag) => {
+  const arrow = (x, y, color, alpha) => {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(x, y);
@@ -95,84 +95,144 @@
     ctx.lineWidth = 1.4;
     ctx.strokeStyle = '#fff';
     ctx.stroke();
-    if (tag) {
-      ctx.font = '700 11px Figtree, system-ui, sans-serif';
-      const w = ctx.measureText(tag).width + 12;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.roundRect(14, 20, w, 18, 6);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.fillText(tag, 20, 33);
-    }
     ctx.restore();
   };
 
-  const t0 = performance.now();
-  let stop = false;
-  const skip = () => { stop = true; };
-  window.addEventListener('pointerdown', skip, { once: true });
-  window.addEventListener('keydown', skip, { once: true });
-  window.addEventListener('wheel', skip, { once: true, passive: true });
+  const selection = (r, u, alpha) => {
+    const gw = r.width * u, gh = r.height * u;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = 'rgba(88,101,242,.08)';
+    ctx.fillRect(r.left, r.top, gw, gh);
+    ctx.strokeRect(r.left, r.top, gw, gh);
+    [[r.left, r.top], [r.left + gw, r.top], [r.left, r.top + gh], [r.left + gw, r.top + gh]].forEach(([x, y]) => {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(x - 3.5, y - 3.5, 7, 7);
+      ctx.strokeRect(x - 3.5, y - 3.5, 7, 7);
+    });
+    ctx.restore();
+  };
 
+  const reveal = (p, u) => {
+    const right = (1 - u) * 100;
+    // 'none' (not ''), or the hiding rule would apply again
+    p.el.style.clipPath = u >= 1 ? 'none' : `inset(0 ${right}% ${right}% 0)`;
+  };
+
+  // ---- the timeline: a list of phases, each with its length ----
+  const FLY = 280, DRAG = 420, GAP = 50;
+  const phases = [{ kind: 'enter', ms: 900 }];
+  sections.forEach((s, i) => {
+    if (i > 0) phases.push({ kind: 'scroll', ms: 750, section: s });
+    const rounds = Math.ceil(s.pieces.length / N);
+    phases.push({ kind: 'build', ms: rounds * (FLY + DRAG + GAP) + 250, section: s });
+  });
+  phases.push({ kind: 'leave', ms: 700 }, { kind: 'top', ms: 900 });
+
+  let phaseIndex = 0, phaseStart = performance.now(), scrollFrom = 0, scrollTo = 0, stopped = false;
+  const startPhase = (now) => {
+    const ph = phases[phaseIndex];
+    phaseStart = now;
+    ph.from = cur.map((c) => ({ ...c }));
+    if (ph.kind === 'scroll') {
+      scrollFrom = window.scrollY;
+      const el = ph.target || ph.section.sec;
+      scrollTo = Math.max(0, el.getBoundingClientRect().top + window.scrollY - (ph.target ? 90 : 40));
+    }
+    if (ph.kind === 'top') { scrollFrom = window.scrollY; scrollTo = 0; }
+    if (ph.kind === 'build') {
+      // pieces on screen get built; any outside the screen just appear
+      ph.jobs = [];
+      const below = [];
+      ph.section.pieces.forEach((p) => {
+        p.rect = p.el.getBoundingClientRect();
+        if (p.rect.bottom < 0) reveal(p, 1);
+        else if (p.rect.top > H - 40) below.push(p);
+        else ph.jobs.push(p);
+      });
+      // a tall section: build what's on screen, then scroll on and build
+      // the rest (a few screens at most)
+      const depth = ph.section.depth || 0;
+      if (below.length && depth < 4) {
+        const rest = { sec: ph.section.sec, pieces: below, depth: depth + 1 };
+        phases.splice(phaseIndex + 1, 0,
+          { kind: 'scroll', ms: 650, target: below[0].el },
+          { kind: 'build', ms: Math.ceil(below.length / N) * (FLY + DRAG + GAP) + 250, section: rest });
+      } else {
+        below.forEach((p) => reveal(p, 1));
+      }
+      // the build takes as long as its own pieces need
+      ph.ms = Math.ceil(Math.max(ph.jobs.length, 1) / N) * (FLY + DRAG + GAP) + 250;
+    }
+    if (ph.kind === 'leave') ph.exits = cur.map(() => ({ x: random() < 0.5 ? -40 : W + 40, y: random() * H }));
+  };
+
+  const finish = () => {
+    if (stopped) return;
+    stopped = true;
+    allPieces.forEach((p) => { p.el.classList.remove('swarm-piece'); p.el.style.clipPath = ''; });
+    root.classList.remove('swarming', 'swarm-ready');
+    canvas.remove();
+    skipBtn.remove();
+    try { sessionStorage.setItem('keepr-swarm', '1'); } catch (_) {}
+  };
+  const skip = () => finish();
+  skipBtn.addEventListener('click', skip);
+  ['wheel', 'touchmove', 'keydown'].forEach((e) => window.addEventListener(e, skip, { once: true, passive: true }));
+  canvas.ownerDocument.addEventListener('pointerdown', (e) => { if (e.target !== skipBtn) skip(); }, { once: true });
+
+  startPhase(phaseStart);
   const frame = (now) => {
-    const t = stop ? 1 : Math.min(1, (now - t0) / DURATION);
+    if (stopped) return;
+    let ph = phases[phaseIndex];
+    let elapsed = now - phaseStart;
+    if (elapsed >= ph.ms) {
+      phaseIndex++;
+      if (phaseIndex >= phases.length) return finish();
+      startPhase(now);
+      ph = phases[phaseIndex];
+      elapsed = 0;
+    }
+    const u = clamp01(elapsed / ph.ms);
+    const s = now / 1000;
     ctx.clearRect(0, 0, W, H);
 
-    // pieces: wiped in under their selection box
-    pieces.forEach((p, k) => {
-      const s0 = startOf(k);
-      const u = io(seg(t, s0 + perSlot * FLY, s0 + perSlot * (FLY + DRAG)));
-      const right = (1 - u) * 100;
-      // 'none' (not ''), or the page's own hiding rule would apply again
-      p.el.style.clipPath = u >= 1 ? 'none' : `inset(0 ${right}% ${right}% 0)`;
-      if (u <= 0) return;
-      const r = (p.rect = p.rect || rectOf(p));
-      const fadeSel = 1 - seg(t, s0 + perSlot * (FLY + DRAG), s0 + perSlot * (FLY + DRAG) + 0.06);
-      if (fadeSel <= 0) return;
-      const gw = r.w * u, gh = r.h * u;
-      ctx.save();
-      ctx.globalAlpha = fadeSel;
-      ctx.strokeStyle = accent;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(r.x, r.y, gw, gh);
-      ctx.fillStyle = 'rgba(88,101,242,.08)';
-      ctx.fillRect(r.x, r.y, gw, gh);
-      [[r.x, r.y], [r.x + gw, r.y], [r.x, r.y + gh], [r.x + gw, r.y + gh]].forEach(([x, y]) => {
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(x - 3.5, y - 3.5, 7, 7);
-        ctx.strokeRect(x - 3.5, y - 3.5, 7, 7);
-      });
-      ctx.restore();
-    });
-
-    // cursors
-    for (let i = 0; i < N; i++) {
-      const enter = io(seg(t, i * 0.01, 0.13 + i * 0.01));
-      let pos = lerp({ x: center().x + (i - N / 2) * 16, y: H + 40 }, flock(i, t), enter);
-      let tag = '', lastEnd = buildStart;
-      const mine = [];
-      for (let k = i; k < pieces.length; k += N) mine.push(k);
-      mine.forEach((k, j) => {
-        const s0 = startOf(k);
-        if (t < s0) return;
-        const r = (pieces[k].rect = pieces[k].rect || rectOf(pieces[k]));
-        const flyU = io(seg(t, s0, s0 + perSlot * FLY));
-        const dragU = io(seg(t, s0 + perSlot * FLY, s0 + perSlot * (FLY + DRAG)));
-        const prev = j === 0 ? flock(i, s0) : (() => { const q = pieces[mine[j - 1]].rect; return { x: q.x + q.w, y: q.y + q.h }; })();
-        pos = lerp(prev, { x: r.x, y: r.y }, flyU);
-        if (dragU > 0) pos = lerp({ x: r.x, y: r.y }, { x: r.x + r.w, y: r.y + r.h }, dragU);
-        tag = pieces[k].tag;
-        lastEnd = s0 + perSlot * (FLY + DRAG);
-      });
-      const leaveAt = Math.max(lastEnd, 0.72);
-      const leave = io(seg(t, leaveAt, leaveAt + 0.2));
-      if (leave > 0) pos = lerp(pos, exitTo[i], leave);
-      arrow(pos.x, pos.y, colors[i % colors.length], 1 - leave, leave > 0 ? '' : tag);
+    if (ph.kind === 'scroll' || ph.kind === 'top') {
+      // 'instant': the page's smooth scrolling would lag behind each step
+      window.scrollTo({ top: scrollFrom + (scrollTo - scrollFrom) * io(u), behavior: 'instant' });
     }
 
-    if (t >= 1) done();
-    else requestAnimationFrame(frame);
+    // sections already built keep their pieces; the current one builds now
+    if (ph.kind === 'build') {
+      ph.jobs.forEach((p, k) => {
+        const i = k % N, round = Math.floor(k / N);
+        const t0 = round * (FLY + DRAG + GAP) + i * 25;
+        const fly = io(clamp01((elapsed - t0) / FLY));
+        const drag = io(clamp01((elapsed - t0 - FLY) / DRAG));
+        const r = p.rect;
+        reveal(p, drag);
+        if (drag > 0 && drag < 1) selection(r, drag, 1);
+        else if (drag >= 1) selection(r, 1, 1 - clamp01((elapsed - t0 - FLY - DRAG) / 220));
+        if (elapsed >= t0) {
+          const start = round === 0 ? ph.from[i] : (() => { const q = ph.jobs[k - N].rect; return { x: q.right, y: q.bottom }; })();
+          let pos = lerp(start, { x: r.left, y: r.top }, fly);
+          if (drag > 0) pos = lerp({ x: r.left, y: r.top }, { x: r.right, y: r.bottom }, drag);
+          cur[i] = pos;
+        }
+      });
+      // cursors with nothing to do in this section drift in the flock
+      for (let i = ph.jobs.length; i < N; i++) cur[i] = lerp(ph.from[i], flockAt(i, s), io(u));
+    } else if (ph.kind === 'enter' || ph.kind === 'scroll' || ph.kind === 'top') {
+      for (let i = 0; i < N; i++) cur[i] = lerp(ph.from[i], flockAt(i, s), io(clamp01(u * 1.4)));
+    } else if (ph.kind === 'leave') {
+      for (let i = 0; i < N; i++) cur[i] = lerp(ph.from[i], ph.exits[i], io(u));
+    }
+
+    const alpha = ph.kind === 'leave' ? 1 - u : ph.kind === 'top' ? 0 : 1;
+    if (alpha > 0) for (let i = 0; i < N; i++) arrow(cur[i].x, cur[i].y, colors[i % colors.length], alpha);
+    requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
 })();
