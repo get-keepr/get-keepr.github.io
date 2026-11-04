@@ -20,6 +20,16 @@
 <link rel="icon" href="assets/icon.png">
 <link rel="preload" href="assets/figtree.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="style.css?v=6">
+<script>
+  // the cursor swarm builds the top of the page once per visit
+  try {
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('keepr-swarm')) {
+      document.documentElement.classList.add('swarming');
+      // never leave anything hidden if the script can't run
+      setTimeout(function () { document.documentElement.classList.remove('swarming'); }, 7000);
+    }
+  } catch (e) {}
+</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -352,6 +362,7 @@
 <script src="vendor/gsap.min.js" defer></script>
 <script src="vendor/ScrollTrigger.min.js" defer></script>
 <script src="main.js?v=6" defer></script>
+<script src="swarm.js?v=1" defer></script>
 <script>
 // The newest release, read once: its download, notes and VirusTotal result.
 (function () {

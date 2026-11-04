@@ -360,3 +360,10 @@ h2 { font-size: clamp(40px, 7vw, 96px); font-weight: 900; }
 .th-reply::before { content: ""; position: absolute; left: 0; top: -18px; width: 12px; height: 34px; border-left: 2px solid var(--line); border-bottom: 2px solid var(--line); border-bottom-left-radius: 10px; }
 .sc-thread.on .r1 { animation: land .7s .5s cubic-bezier(.3, 1.4, .5, 1) both; }
 .sc-thread.on .r2 { animation: land .7s 1.1s cubic-bezier(.3, 1.4, .5, 1) both; }
+
+/* cursor swarm opening: the pieces stay hidden until a cursor drags them in */
+.swarming .nav .brand, .swarming .nav nav,
+.swarming .hero-copy > .play-test, .swarming .hero-copy > .eyebrow,
+.swarming .headline .line, .swarming .hero-copy > .lede,
+.swarming .cta .btn, .swarming .hero-copy > .trust,
+.swarming .fan .phone.main { clip-path: inset(0 100% 100% 0); }
