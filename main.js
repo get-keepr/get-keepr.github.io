@@ -15,7 +15,7 @@
   const track = $('.keytrack');
   for (let i = 0; i < 30; i++) track.appendChild(document.createElement('i'));
   const blocks = $$('.keytrack i');
-  const keyColors = ['#5865F2', '#23A55A', '#EB459E'];
+  const keyColors = ['#5865F2', '#EDEDEF', '#55555C'];
 
   // features: one chapter at a time while the section scrolls past
   const chapters = $('.chapters');
