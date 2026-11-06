@@ -44,7 +44,7 @@ b{color:var(--text)}
 <section id="how_to_use_end_to_end_encryption">
 <h2>How does encryption work?</h2>
 <p>Direct messages and private groups are end-to-end encrypted: only the people in the chat can read them. Set up <b>Chat backup</b> in Settings with a recovery key so you can read old messages on a new device, and verify the devices of people you talk to by comparing emoji.</p>
-<p><b>Strict encryption</b> goes further and rotates keys more often, so one leaked key reveals as little as possible.</p>
+<p><b>Strict encryption</b> changes a chat's own encryption setting so its message key is replaced much more often: every 3 messages or 5 minutes in direct chats, every 10 messages or an hour in groups, instead of Matrix's default of 100 messages or a week. One leaked key then reveals as little as possible. Because it's a setting of the chat (not of the app), every Matrix app in that chat follows it. Keepr turns it on for chats you create (Settings, Security); you can switch it on in an existing chat's encryption settings if you're allowed to change them. Chats without it, including ones others created, keep the default. More frequent keys mean a little more key sharing between devices.</p>
 </section>
 
 <section id="how_do_i_find_other_users">
