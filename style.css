@@ -349,6 +349,9 @@ main > section + section { border-top: 1px solid var(--line); }
 .play-test-tag { display: inline-block; margin-bottom: 8px; padding: 3px 8px; border-radius: 4px; background: var(--blurple); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .play-test-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
 .play-test .play-test-note { font-size: 13px; color: var(--muted); }
+.play-test-status { margin: 0 0 10px !important; font-family: var(--mono); font-size: 12px !important; letter-spacing: .04em; color: var(--blurple-soft) !important; }
+.play-test-status button { margin-left: 6px; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; }
+.play-test-links a.done::after { content: " \2713"; }
 .play-test-steps { margin: 10px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.6; color: var(--text); }
 .play-test.soon, .apk-small.soon, .soon-btn { filter: grayscale(1); opacity: .5; }
 .play-test.soon a, .apk-small.soon a, .soon-btn { pointer-events: none; cursor: default; }
